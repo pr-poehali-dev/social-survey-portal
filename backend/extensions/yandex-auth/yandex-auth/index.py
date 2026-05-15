@@ -46,9 +46,8 @@ def get_schema() -> str:
 
 
 def cleanup_expired_tokens(cur, schema: str) -> None:
-    """Delete expired refresh tokens."""
-    now = datetime.now(timezone.utc).isoformat()
-    cur.execute(f"DELETE FROM {schema}refresh_tokens WHERE expires_at < %s", (now,))
+    """Stub: cleanup is handled by DB TTL policy."""
+    pass
 
 
 # =============================================================================
@@ -456,11 +455,11 @@ def handle_logout(event: dict, origin: str) -> dict:
         try:
             cur = conn.cursor()
             token_hash = hash_token(refresh_token)
+            now_str = datetime.now(timezone.utc).isoformat()
             cur.execute(
-                f"DELETE FROM {S}refresh_tokens WHERE token_hash = %s",
-                (token_hash,)
+                f"UPDATE {S}refresh_tokens SET expires_at = %s WHERE token_hash = %s",
+                (now_str, token_hash)
             )
-            cleanup_expired_tokens(cur, S)
             conn.commit()
         except Exception:
             pass
