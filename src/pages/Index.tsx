@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -20,6 +20,17 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [showProfile, setShowProfile] = useState(false);
   const auth = useYandexAuth({ apiUrls });
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false);
+      }
+    };
+    if (showProfile) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfile]);
 
   const polls = [
     {
@@ -108,24 +119,27 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-3">
             {auth.isAuthenticated && auth.user ? (
-              <button
-                onClick={() => setShowProfile(!showProfile)}
-                className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors relative"
-              >
-                {auth.user.avatar_url ? (
-                  <img src={auth.user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-[#FC3F1D] flex items-center justify-center text-white text-xs font-bold">
-                    {auth.user.name ? auth.user.name[0].toUpperCase() : 'Я'}
-                  </div>
-                )}
-                <span className="hidden md:inline">{auth.user.name || 'Профиль'}</span>
+              <div ref={profileRef} className="relative">
+                <button
+                  onClick={() => setShowProfile(!showProfile)}
+                  className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                >
+                  {auth.user.avatar_url ? (
+                    <img src={auth.user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/40" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#FC3F1D] flex items-center justify-center text-white text-xs font-bold">
+                      {auth.user.name ? auth.user.name[0].toUpperCase() : 'Я'}
+                    </div>
+                  )}
+                  <span className="hidden md:inline">{auth.user.name || 'Профиль'}</span>
+                  <Icon name="ChevronDown" size={14} className="text-muted-foreground" />
+                </button>
                 {showProfile && (
-                  <div className="absolute top-10 right-0 z-50 w-72" onClick={(e) => e.stopPropagation()}>
+                  <div className="absolute top-12 right-0 z-50 w-72">
                     <UserProfile user={auth.user} onLogout={async () => { await auth.logout(); setShowProfile(false); }} isLoading={auth.isLoading} />
                   </div>
                 )}
-              </button>
+              </div>
             ) : (
               <YandexLoginButton onClick={auth.login} isLoading={auth.isLoading} />
             )}
@@ -141,6 +155,12 @@ const Index = () => {
         {activeTab === 'home' && (
           <div className="space-y-16 animate-fade-in">
             <section className="text-center space-y-6 py-12">
+              {auth.isAuthenticated && auth.user && (
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary animate-fade-in">
+                  <Icon name="CheckCircle" size={16} />
+                  Добро пожаловать, {auth.user.name?.split(' ')[0] || 'пользователь'}!
+                </div>
+              )}
               <div className="inline-block">
                 <h1 className="text-5xl md:text-7xl font-extrabold mb-4 animate-slide-up">
                   Узнайте мнение <br />
@@ -155,9 +175,11 @@ const Index = () => {
                   Начать опрос
                   <Icon name="ArrowRight" size={20} className="ml-2" />
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8">
-                  Смотреть примеры
-                </Button>
+                {!auth.isAuthenticated && (
+                  <Button size="lg" variant="outline" className="text-lg px-8" onClick={auth.login}>
+                    Войти через Яндекс
+                  </Button>
+                )}
               </div>
             </section>
 
