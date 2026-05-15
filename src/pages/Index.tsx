@@ -92,10 +92,16 @@ const Index = () => {
               Результаты
             </button>
           </div>
-          <Button className="gradient-purple-pink border-0">
-            <Icon name="Plus" size={18} className="mr-2" />
-            Создать опрос
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline">
+              <Icon name="LogIn" size={18} className="mr-2" />
+              Войти
+            </Button>
+            <Button className="gradient-purple-pink border-0">
+              <Icon name="Plus" size={18} className="mr-2" />
+              Создать опрос
+            </Button>
+          </div>
         </div>
       </nav>
 
