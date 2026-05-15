@@ -1,0 +1,1 @@
+{"tests": [{"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200}, {"name": "Get auth URL", "method": "GET", "path": "/?action=auth-url", "expectedStatus": 200, "expectedBody": {"url": "string"}, "bodyMatcher": "partial"}]}

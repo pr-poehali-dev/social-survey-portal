@@ -3,9 +3,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import Icon from '@/components/ui/icon';
+import { useYandexAuth } from '@/components/extensions/yandex-auth/useYandexAuth';
+import { YandexLoginButton } from '@/components/extensions/yandex-auth/YandexLoginButton';
+import { UserProfile } from '@/components/extensions/yandex-auth/UserProfile';
+
+const AUTH_URL = "https://functions.poehali.dev/38579c8f-0969-4569-8dfe-d5b86b2ebd28";
+
+const apiUrls = {
+  authUrl: `${AUTH_URL}?action=auth-url`,
+  callback: `${AUTH_URL}?action=callback`,
+  refresh: `${AUTH_URL}?action=refresh`,
+  logout: `${AUTH_URL}?action=logout`,
+};
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const [showProfile, setShowProfile] = useState(false);
+  const auth = useYandexAuth({ apiUrls });
 
   const polls = [
     {
@@ -93,10 +107,28 @@ const Index = () => {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline">
-              <Icon name="LogIn" size={18} className="mr-2" />
-              Войти
-            </Button>
+            {auth.isAuthenticated && auth.user ? (
+              <button
+                onClick={() => setShowProfile(!showProfile)}
+                className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors relative"
+              >
+                {auth.user.avatar_url ? (
+                  <img src={auth.user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#FC3F1D] flex items-center justify-center text-white text-xs font-bold">
+                    {auth.user.name ? auth.user.name[0].toUpperCase() : 'Я'}
+                  </div>
+                )}
+                <span className="hidden md:inline">{auth.user.name || 'Профиль'}</span>
+                {showProfile && (
+                  <div className="absolute top-10 right-0 z-50 w-72" onClick={(e) => e.stopPropagation()}>
+                    <UserProfile user={auth.user} onLogout={async () => { await auth.logout(); setShowProfile(false); }} isLoading={auth.isLoading} />
+                  </div>
+                )}
+              </button>
+            ) : (
+              <YandexLoginButton onClick={auth.login} isLoading={auth.isLoading} />
+            )}
             <Button className="gradient-purple-pink border-0">
               <Icon name="Plus" size={18} className="mr-2" />
               Создать опрос
